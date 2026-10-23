@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwasthaSaathi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Hind:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a printed health card. Saffron top stripe, a ruled form with a label column on wide screens, and a triage result that reads at a glance. */
+:root {
+  --bg: #F1F6F5;
+  --surface: #FFFFFF;
+  --ink: #12292B;
+  --muted: #4F6568;
+  --line: #CFDDDB;
+  --brand: #0B6B70;
+  --brand-ink: #FFFFFF;
+  --stripe: #E59A2F;
+  --green: #1B7F46;
+  --green-bg: #E3F3E9;
+  --amber: #8F5600;
+  --amber-bg: #FDF0D5;
+  --red: #B42323;
+  --red-bg: #FBE4E2;
+  --focus: #0B6B70;
+  --font-display: "Baloo 2", "Hind", system-ui, sans-serif;
+  --font-body: "Hind", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1B1D; --surface: #142A2C; --ink: #E6F0EF; --muted: #9DB6B6; --line: #28474A;
+    --brand: #4FC3C8; --brand-ink: #062325; --stripe: #E8A94A;
+    --green: #5DD38C; --green-bg: #123222; --amber: #F2B84B; --amber-bg: #3A2B0C;
+    --red: #FF8A80; --red-bg: #3C1717; --focus: #4FC3C8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1B1D; --surface: #142A2C; --ink: #E6F0EF; --muted: #9DB6B6; --line: #28474A;
+  --brand: #4FC3C8; --brand-ink: #062325; --stripe: #E8A94A;
+  --green: #5DD38C; --green-bg: #123222; --amber: #F2B84B; --amber-bg: #3A2B0C;
+  --red: #FF8A80; --red-bg: #3C1717; --focus: #4FC3C8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 56px;
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+.stripe { height: 6px; background: var(--stripe); margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 20px 0 8px; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; line-height: 1.1; color: var(--brand); letter-spacing: 0.2px; }
+.langs { display: inline-flex; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.langs button { font: inherit; font-weight: 600; min-height: 44px; min-width: 64px; padding: 0 14px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.langs button + button { border-left: 1.5px solid var(--line); }
+.langs button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.7rem, 5.5vw, 2.4rem); line-height: 1.2; margin: 12px 0 8px; text-wrap: balance; }
+.notice { margin: 0 0 8px; padding: 12px 14px; border-left: 4px solid var(--stripe); background: var(--surface); color: var(--muted); font-size: 0.95rem; }
+fieldset { border: 0; border-top: 1.5px solid var(--line); margin: 28px 0 0; padding: 18px 0 0; min-width: 0; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 4px 28px; }
+legend { display: contents; }
+.sec-title { grid-column: 1; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; line-height: 1.25; color: var(--brand); padding-top: 2px; }
+.sec-body { grid-column: 2; display: grid; gap: 16px; min-width: 0; }
+.row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+label.lbl { font-weight: 600; font-size: 0.95rem; }
+input[type="number"], select {
+  font: inherit; width: 100%; min-height: 48px; padding: 8px 12px; color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px;
+}
+input[aria-invalid="true"] { border-color: var(--red); }
+.err { color: var(--red); font-size: 0.9rem; min-height: 0; }
+.check { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 6px 0; cursor: pointer; }
+.check input { width: 24px; height: 24px; margin: 2px 0 0; flex: none; accent-color: var(--brand); }
+.check span { padding-top: 1px; }
+.danger { border: 1.5px solid var(--red); border-radius: 10px; padding: 8px 14px; background: var(--red-bg); }
+.danger .grp { font-weight: 600; color: var(--red); margin: 6px 0 2px; }
+.hint { color: var(--muted); font-size: 0.92rem; margin: 0; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { font: inherit; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; min-height: 54px; padding: 0 28px; border-radius: 10px; border: 0; background: var(--brand); color: var(--brand-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--brand); border: 1.5px solid var(--brand); font-size: 1rem; min-height: 48px; padding: 0 18px; font-family: var(--font-body); font-weight: 600; }
+#formErr { color: var(--red); font-weight: 600; margin: 0; }
+#result { margin-top: 36px; scroll-margin-top: 16px; }
+.banner { display: flex; gap: 16px; align-items: center; padding: 18px 20px; border-radius: 12px; border: 2px solid currentColor; }
+.banner svg { flex: none; width: 48px; height: 48px; }
+.banner h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.4rem, 5vw, 1.9rem); line-height: 1.2; margin: 0; }
+.banner.green { color: var(--green); background: var(--green-bg); }
+.banner.amber { color: var(--amber); background: var(--amber-bg); }
+.banner.red { color: var(--red); background: var(--red-bg); }
+.next { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.next li { padding-left: 28px; position: relative; }
+.next li::before { content: ""; position: absolute; left: 4px; top: 0.6em; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
+.cats { margin-top: 22px; border-top: 1.5px solid var(--line); }
+.cat { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 4px 28px; padding: 14px 0; border-bottom: 1.5px solid var(--line); }
+.cat h3 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--brand); }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 2px 12px 2px 10px; border-radius: 999px; font-size: 0.95rem; margin-bottom: 6px; }
+.pill::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--green); background: var(--green-bg); }
+.pill.warn { color: var(--amber); background: var(--amber-bg); }
+.pill.bad { color: var(--red); background: var(--red-bg); }
+.pill.none { color: var(--muted); background: var(--bg); border: 1px solid var(--line); }
+.cat ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 0.95rem; }
+.summary { margin-top: 26px; }
+.summary h3 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 4px; color: var(--brand); }
+pre#sumText { margin: 8px 0 12px; padding: 14px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88rem; line-height: 1.5; user-select: all; }
+.method { margin-top: 36px; padding-top: 16px; border-top: 1.5px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+.method p { margin: 0 0 8px; }
+@media (max-width: 640px) {
+  fieldset, .cat { grid-template-columns: minmax(0, 1fr); }
+  .sec-title, .sec-body { grid-column: 1; }
+  .sec-title { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">SwasthaSaathi</div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" data-lang="hi" aria-pressed="false" lang="hi">हिन्दी</button>
+      <button type="button" data-lang="mr" aria-pressed="false" lang="mr">मराठी</button>
+    </div>
+  </header>
+  <h1 data-i="tagline">Free health risk check in 3 minutes</h1>
+  <p class="notice" data-i="notice"></p>
+
+  <form id="form" novalidate>
+    <fieldset>
+      <legend><span class="sec-title" data-i="s1">About you</span></legend>
+      <div class="sec-body">
+        <div class="row2">
+          <div class="field"><label class="lbl" for="age" data-i="age">Age</label><input type="number" id="age" inputmode="numeric" value="52"><div class="err" id="e_age"></div></div>
+          <div class="field"><label class="lbl" for="sex" data-i="sex">Sex</label>
+            <select id="sex"><option value="m" data-i="male">Male</option><option value="f" data-i="female">Female</option></select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="lbl" for="height" data-i="height">Height</label><input type="number" id="height" inputmode="numeric" value="165"><div class="err" id="e_height"></div></div>
+          <div class="field"><label class="lbl" for="weight" data-i="weight">Weight</label><input type="number" id="weight" inputmode="decimal" value="74"><div class="err" id="e_weight"></div></div>
+          <div class="field"><label class="lbl" for="waist" data-i="waist">Waist</label><input type="number" id="waist" inputmode="numeric" value="98"><div class="err" id="e_waist"></div></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="sec-title" data-i="s2">Daily life and family</span></legend>
+      <div class="sec-body">
+        <div class="field"><label class="lbl" for="activity" data-i="activity">Physical activity</label>
+          <select id="activity">
+            <option value="0" data-i="a0"></option><option value="10" data-i="a1"></option>
+            <option value="20" selected data-i="a2"></option><option value="30" data-i="a3"></option>
+          </select></div>
+        <div class="field"><label class="lbl" for="famd" data-i="famd">Family history of diabetes</label>
+          <select id="famd"><option value="0" data-i="f0"></option><option value="10" selected data-i="f1"></option><option value="20" data-i="f2"></option></select></div>
+        <label class="check"><input type="checkbox" id="famh"><span data-i="famh"></span></label>
+        <label class="check"><input type="checkbox" id="tob"><span data-i="tob"></span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="sec-title" data-i="s3">Symptoms in the last month</span></legend>
+      <div class="sec-body">
+        <div>
+          <label class="check"><input type="checkbox" id="sy1" checked><span data-i="sy1"></span></label>
+          <label class="check"><input type="checkbox" id="sy2" checked><span data-i="sy2"></span></label>
+          <label class="check"><input type="checkbox" id="sy3"><span data-i="sy3"></span></label>
+          <label class="check"><input type="checkbox" id="sy4"><span data-i="sy4"></span></label>
+          <label class="check"><input type="checkbox" id="sy5"><span data-i="sy5"></span></label>
+        </div>
+        <div class="danger">
+          <div class="grp" data-i="dangerTitle"></div>
+          <label class="check"><input type="checkbox" id="r1"><span data-i="r1"></span></label>
+          <label class="check"><input type="checkbox" id="r2"><span data-i="r2"></span></label>
+          <label class="check"><input type="checkbox" id="r3"><span data-i="r3"></span></label>
+          <label class="check"><input type="checkbox" id="r4"><span data-i="r4"></span></label>
+          <label class="check"><input type="checkbox" id="r5"><span data-i="r5"></span></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="sec-title" data-i="s4">Measurements</span></legend>
+      <div class="sec-body">
+        <p class="hint" data-i="hint"></p>
+        <div class="row2">
+          <div class="field"><label class="lbl" for="sbp" data-i="sbp">Upper BP</label><input type="number" id="sbp" inputmode="numeric" value="148"><div class="err" id="e_sbp"></div></div>
+          <div class="field"><label class="lbl" for="dbp" data-i="dbp">Lower BP</label><input type="number" id="dbp" inputmode="numeric" value="94"><div class="err" id="e_dbp"></div></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="lbl" for="glu" data-i="glu">Blood sugar</label><input type="number" id="glu" inputmode="numeric" value="118"><div class="err" id="e_glu"></div></div>
+          <div class="field"><label class="lbl" for="gtype" data-i="gtype">Taken</label>
+            <select id="gtype"><option value="fasting" data-i="fasting"></option><option value="random" data-i="random"></option></select></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" class="btn" id="go" data-i="go">Check my risk</button>
+      <button type="button" class="btn ghost" id="reset" data-i="reset">Start again</button>
+      <p id="formErr" role="alert"></p>
+    </div>
+  </form>
+
+  <section id="result" aria-live="polite" hidden></section>
+
+  <div class="method">
+    <p data-i="method"></p>
+    <p data-i="disclaimer"></p>
+  </div>
+</div>
+
+<script>
+/* ---------- Text in three languages ---------- */
+var I18N = {
+  en: {
+    tagline: "Free health risk check in 3 minutes",
+    notice: "This is a screening tool, not a diagnosis. The values below are examples. Replace them with your own.",
+    s1: "About you", age: "Age (years)", sex: "Sex", male: "Male", female: "Female",
+    height: "Height (cm)", weight: "Weight (kg)", waist: "Waist (cm)",
+    s2: "Daily life and family", activity: "Physical activity",
+    a0: "Hard physical work or regular exercise", a1: "Moderate work or walking daily", a2: "Light work, little walking", a3: "Mostly sitting",
+    famd: "Family history of diabetes", f0: "None", f1: "One parent", f2: "Both parents",
+    famh: "Heart attack or stroke in close family before age 60", tob: "I smoke or chew tobacco",
+    s3: "Symptoms in the last month",
+    sy1: "Very thirsty or urinating often", sy2: "Unusual tiredness", sy3: "Blurred vision", sy4: "Cuts or wounds heal slowly", sy5: "Frequent headache or dizziness",
+    dangerTitle: "Danger signs right now",
+    r1: "Chest pain or pressure", r2: "Hard to breathe while resting", r3: "Fainting",
+    r4: "Weakness or numbness on one side, or slurred speech", r5: "Confusion, vomiting and very high thirst",
+    s4: "Measurements", hint: "Leave blank if not measured. An ASHA worker or your nearest PHC can measure them.",
+    sbp: "Upper BP (systolic)", dbp: "Lower BP (diastolic)", glu: "Blood sugar (mg/dL)", gtype: "Taken",
+    fasting: "Fasting (8+ hours)", random: "After eating, or any time",
+    go: "Check my risk", reset: "Start again", formErr: "Please check the marked values.",
+    errRange: "Enter a value from {a} to {b}.", errPair: "Enter both BP values, or leave both blank.",
+    resTitle: "Your result",
+    green: "GREEN: Low risk", amber: "AMBER: See a health worker soon", red: "RED: Get care today",
+    diab: "Diabetes risk", bp: "Blood pressure", heart: "Heart risk",
+    low: "Low", mod: "Moderate", high: "High", normal: "Normal", raised: "Raised", nm: "Not measured",
+    w_idrs: "Diabetes risk score {n} out of 100", w_glu_dia: "Blood sugar {v} mg/dL is in the diabetes range",
+    w_glu_up: "Blood sugar {v} mg/dL is above normal", w_glu_ok: "Blood sugar {v} mg/dL is normal",
+    w_sym: "{n} symptom(s) that go with diabetes", w_bp: "Blood pressure {s}/{d}", w_bpnm: "Get your blood pressure checked at a PHC",
+    w_bmi: "BMI {v}", w_hf: "{n} heart risk factor(s)", w_flag: "You reported a danger sign",
+    n_red1: "Go to the nearest hospital or call 108 or 112 now. Do not wait, and do not travel alone.",
+    n_red2: "Tell the doctor about your danger signs, blood pressure and blood sugar.",
+    n_amber1: "Visit your nearest PHC within 1 to 2 weeks for blood sugar and blood pressure tests.",
+    n_amber2: "Tell the doctor about your symptoms and your family history.",
+    n_green1: "Check again once a year. Check again in 6 months if any row above says Moderate.",
+    n_nm: "Blood pressure or blood sugar was not measured. Get both checked at a PHC.",
+    n_life: "Walk 30 minutes on most days, cut sugary drinks and tobacco, and eat more vegetables and pulses.",
+    sumTitle: "Summary for the doctor or ASHA worker", sumNote: "The summary is in English so that any doctor can read it.",
+    copy: "Copy summary", copied: "Copied",
+    method: "How it works: diabetes risk uses the Indian Diabetes Risk Score (Madras Diabetes Research Foundation) with your age, waist, activity and family history. Blood pressure and blood sugar use standard cut-offs. This is a rule-based prototype made for a student project.",
+    disclaimer: "This tool does not diagnose any disease. Only a doctor can confirm a diagnosis. Your answers stay on this device."
+  },
+  hi: {
+    tagline: "3 मिनट में मुफ़्त स्वास्थ्य जोखिम जाँच",
+    notice: "यह केवल जाँच का साधन है, निदान नहीं। नीचे के मान उदाहरण हैं। इन्हें अपने मान से बदलें।",
+    s1: "आपके बारे में", age: "उम्र (वर्ष)", sex: "लिंग", male: "पुरुष", female: "महिला",
+    height: "ऊँचाई (सेमी)", weight: "वज़न (किग्रा)", waist: "कमर (सेमी)",
+    s2: "दिनचर्या और परिवार", activity: "शारीरिक गतिविधि",
+    a0: "कड़ी मेहनत या नियमित व्यायाम", a1: "रोज़ मध्यम काम या पैदल चलना", a2: "हल्का काम, कम चलना", a3: "ज़्यादातर बैठे रहना",
+    famd: "परिवार में मधुमेह", f0: "कोई नहीं", f1: "एक माता या पिता", f2: "दोनों माता-पिता",
+    famh: "परिवार में 60 साल से पहले हार्ट अटैक या स्ट्रोक", tob: "मैं धूम्रपान करता/करती हूँ या तंबाकू खाता/खाती हूँ",
+    s3: "पिछले महीने के लक्षण",
+    sy1: "बहुत प्यास लगना या बार-बार पेशाब आना", sy2: "असामान्य थकान", sy3: "धुंधला दिखना", sy4: "घाव देर से भरना", sy5: "बार-बार सिरदर्द या चक्कर",
+    dangerTitle: "अभी खतरे के लक्षण",
+    r1: "सीने में दर्द या दबाव", r2: "आराम में भी साँस लेने में तकलीफ़", r3: "बेहोशी",
+    r4: "एक तरफ़ कमज़ोरी या सुन्नपन, या बोलने में लड़खड़ाहट", r5: "भ्रम, उल्टी और बहुत ज़्यादा प्यास",
+    s4: "माप", hint: "न मापा हो तो खाली छोड़ें। आशा कार्यकर्ता या नज़दीकी PHC माप सकते हैं।",
+    sbp: "ऊपरी BP (सिस्टोलिक)", dbp: "निचला BP (डायस्टोलिक)", glu: "ब्लड शुगर (mg/dL)", gtype: "कब लिया",
+    fasting: "खाली पेट (8+ घंटे)", random: "खाने के बाद, या किसी भी समय",
+    go: "मेरा जोखिम देखें", reset: "फिर से शुरू करें", formErr: "कृपया चिह्नित मान जाँचें।",
+    errRange: "{a} से {b} के बीच मान डालें।", errPair: "दोनों BP मान भरें, या दोनों खाली छोड़ें।",
+    resTitle: "आपका परिणाम",
+    green: "हरा: कम जोखिम", amber: "पीला: जल्द स्वास्थ्यकर्मी से मिलें", red: "लाल: आज ही इलाज लें",
+    diab: "मधुमेह का जोखिम", bp: "रक्तचाप", heart: "हृदय का जोखिम",
+    low: "कम", mod: "मध्यम", high: "ज़्यादा", normal: "सामान्य", raised: "बढ़ा हुआ", nm: "मापा नहीं",
+    w_idrs: "मधुमेह जोखिम स्कोर {n} (100 में से)", w_glu_dia: "ब्लड शुगर {v} mg/dL मधुमेह की सीमा में है",
+    w_glu_up: "ब्लड शुगर {v} mg/dL सामान्य से ज़्यादा है", w_glu_ok: "ब्लड शुगर {v} mg/dL सामान्य है",
+    w_sym: "मधुमेह से जुड़े {n} लक्षण", w_bp: "रक्तचाप {s}/{d}", w_bpnm: "PHC में अपना रक्तचाप जँचवाएँ",
+    w_bmi: "BMI {v}", w_hf: "हृदय के {n} जोखिम कारक", w_flag: "आपने खतरे का लक्षण बताया",
+    n_red1: "अभी नज़दीकी अस्पताल जाएँ या 108 या 112 पर कॉल करें। इंतज़ार न करें और अकेले यात्रा न करें।",
+    n_red2: "डॉक्टर को अपने खतरे के लक्षण, रक्तचाप और ब्लड शुगर के बारे में बताएँ।",
+    n_amber1: "1 से 2 सप्ताह में नज़दीकी PHC जाकर ब्लड शुगर और रक्तचाप की जाँच कराएँ।",
+    n_amber2: "डॉक्टर को अपने लक्षण और परिवार के इतिहास के बारे में बताएँ।",
+    n_green1: "साल में एक बार फिर जाँच करें। ऊपर कोई पंक्ति \"मध्यम\" हो तो 6 महीने में जाँच करें।",
+    n_nm: "रक्तचाप या ब्लड शुगर नहीं मापा गया। दोनों PHC में जँचवाएँ।",
+    n_life: "ज़्यादातर दिन 30 मिनट पैदल चलें, मीठे पेय और तंबाकू कम करें, और सब्ज़ियाँ व दालें ज़्यादा खाएँ।",
+    sumTitle: "डॉक्टर या आशा कार्यकर्ता के लिए सारांश", sumNote: "सारांश अंग्रेज़ी में है ताकि कोई भी डॉक्टर इसे पढ़ सके।",
+    copy: "सारांश कॉपी करें", copied: "कॉपी हो गया",
+    method: "यह कैसे काम करता है: मधुमेह का जोखिम भारतीय मधुमेह जोखिम स्कोर (मद्रास डायबिटीज़ रिसर्च फ़ाउंडेशन) से निकलता है, जिसमें उम्र, कमर, गतिविधि और परिवार का इतिहास गिना जाता है। रक्तचाप और ब्लड शुगर के लिए मानक सीमाएँ लगाई गई हैं। यह एक विद्यार्थी परियोजना के लिए बना नियम-आधारित प्रोटोटाइप है।",
+    disclaimer: "यह टूल किसी रोग का निदान नहीं करता। निदान केवल डॉक्टर कर सकते हैं। आपके उत्तर इसी डिवाइस पर रहते हैं।"
+  },
+  mr: {
+    tagline: "३ मिनिटांत मोफत आरोग्य धोका तपासणी",
+    notice: "हे फक्त तपासणीचे साधन आहे, निदान नाही. खालील मूल्ये उदाहरणे आहेत. ती तुमच्या मूल्यांनी बदला.",
+    s1: "तुमच्याबद्दल", age: "वय (वर्षे)", sex: "लिंग", male: "पुरुष", female: "स्त्री",
+    height: "उंची (सेमी)", weight: "वजन (किलो)", waist: "कंबर (सेमी)",
+    s2: "दिनचर्या आणि कुटुंब", activity: "शारीरिक हालचाल",
+    a0: "कष्टाचे काम किंवा नियमित व्यायाम", a1: "रोज मध्यम काम किंवा चालणे", a2: "हलके काम, कमी चालणे", a3: "बहुतेक वेळ बसून",
+    famd: "कुटुंबात मधुमेह", f0: "कोणी नाही", f1: "आई किंवा वडील, एक", f2: "आई आणि वडील दोन्ही",
+    famh: "कुटुंबात ६० वर्षांआधी हृदयविकाराचा झटका किंवा स्ट्रोक", tob: "मी धूम्रपान करतो/करते किंवा तंबाखू खातो/खाते",
+    s3: "गेल्या महिन्यातील लक्षणे",
+    sy1: "खूप तहान लागणे किंवा वारंवार लघवी होणे", sy2: "असामान्य थकवा", sy3: "अंधुक दिसणे", sy4: "जखमा उशिरा भरणे", sy5: "वारंवार डोकेदुखी किंवा चक्कर",
+    dangerTitle: "आत्ताची धोक्याची लक्षणे",
+    r1: "छातीत दुखणे किंवा दाब", r2: "विश्रांतीतही श्वास घ्यायला त्रास", r3: "बेशुद्ध पडणे",
+    r4: "एका बाजूला अशक्तपणा किंवा बधिरता, किंवा बोलण्यात अडखळणे", r5: "गोंधळ, उलट्या आणि खूप जास्त तहान",
+    s4: "मोजमाप", hint: "मोजले नसेल तर रिकामे सोडा. आशा सेविका किंवा जवळचे PHC मोजू शकतात.",
+    sbp: "वरचा BP (सिस्टोलिक)", dbp: "खालचा BP (डायस्टोलिक)", glu: "रक्तातील साखर (mg/dL)", gtype: "कधी घेतले",
+    fasting: "उपाशीपोटी (८+ तास)", random: "जेवणानंतर, किंवा कधीही",
+    go: "माझा धोका पाहा", reset: "पुन्हा सुरू करा", formErr: "कृपया खुणा केलेली मूल्ये तपासा.",
+    errRange: "{a} ते {b} मधील मूल्य भरा.", errPair: "दोन्ही BP मूल्ये भरा, किंवा दोन्ही रिकामी सोडा.",
+    resTitle: "तुमचा निकाल",
+    green: "हिरवा: कमी धोका", amber: "पिवळा: लवकर आरोग्य कर्मचाऱ्याला भेटा", red: "लाल: आजच उपचार घ्या",
+    diab: "मधुमेहाचा धोका", bp: "रक्तदाब", heart: "हृदयाचा धोका",
+    low: "कमी", mod: "मध्यम", high: "जास्त", normal: "सामान्य", raised: "वाढलेला", nm: "मोजले नाही",
+    w_idrs: "मधुमेह धोका गुण {n} (१०० पैकी)", w_glu_dia: "रक्तातील साखर {v} mg/dL मधुमेहाच्या पातळीत आहे",
+    w_glu_up: "रक्तातील साखर {v} mg/dL सामान्यपेक्षा जास्त आहे", w_glu_ok: "रक्तातील साखर {v} mg/dL सामान्य आहे",
+    w_sym: "मधुमेहाशी जुळणारी {n} लक्षणे", w_bp: "रक्तदाब {s}/{d}", w_bpnm: "PHC मध्ये रक्तदाब तपासून घ्या",
+    w_bmi: "BMI {v}", w_hf: "हृदयाचे {n} धोका घटक", w_flag: "तुम्ही धोक्याचे लक्षण सांगितले",
+    n_red1: "आत्ताच जवळच्या रुग्णालयात जा किंवा १०८ किंवा ११२ वर कॉल करा. थांबू नका आणि एकटे प्रवास करू नका.",
+    n_red2: "डॉक्टरांना तुमची धोक्याची लक्षणे, रक्तदाब आणि रक्तातील साखर सांगा.",
+    n_amber1: "१ ते २ आठवड्यांत जवळच्या PHC मध्ये रक्तातील साखर आणि रक्तदाब तपासा.",
+    n_amber2: "डॉक्टरांना तुमची लक्षणे आणि कुटुंबातील इतिहास सांगा.",
+    n_green1: "वर्षातून एकदा पुन्हा तपासा. वरीलपैकी कोणतीही ओळ \"मध्यम\" असल्यास ६ महिन्यांत तपासा.",
+    n_nm: "रक्तदाब किंवा रक्तातील साखर मोजली गेली नाही. दोन्ही PHC मध्ये तपासा.",
+    n_life: "बहुतेक दिवस ३० मिनिटे चाला, गोड पेये आणि तंबाखू कमी करा, आणि भाज्या व डाळी जास्त खा.",
+    sumTitle: "डॉक्टर किंवा आशा सेविकेसाठी सारांश", sumNote: "सारांश इंग्रजीत आहे, म्हणजे कोणताही डॉक्टर तो वाचू शकेल.",
+    copy: "सारांश कॉपी करा", copied: "कॉपी झाले",
+    method: "हे कसे चालते: मधुमेहाचा धोका भारतीय मधुमेह धोका गुणांकावरून (मद्रास डायबेटीस रिसर्च फाउंडेशन) काढला जातो, ज्यात वय, कंबर, हालचाल आणि कुटुंबाचा इतिहास पाहिला जातो. रक्तदाब आणि रक्तातील साखरेसाठी प्रमाणित मर्यादा वापरल्या आहेत. हा विद्यार्थी प्रकल्पासाठी बनवलेला नियमांवर आधारित प्रोटोटाइप आहे.",
+    disclaimer: "हे साधन कोणत्याही रोगाचे निदान करत नाही. निदान फक्त डॉक्टर करू शकतात. तुमची उत्तरे याच उपकरणावर राहतात."
+  }
+};
+
+/* ---------- Screening logic (no screen code in this block) ---------- */
+function assess(x) {
+  var bmi = x.weight / Math.pow(x.height / 100, 2);
+  bmi = Math.round(bmi * 10) / 10;
+
+  // Indian Diabetes Risk Score: age, waist, activity, family history
+  var ageP = x.age < 35 ? 0 : (x.age < 50 ? 20 : 30);
+  var waistP;
+  if (x.sex === "m") waistP = x.waist >= 100 ? 20 : (x.waist >= 90 ? 10 : 0);
+  else waistP = x.waist >= 90 ? 20 : (x.waist >= 80 ? 10 : 0);
+  var idrs = ageP + waistP + x.activity + x.famd;
+  var diabLevel = idrs >= 60 ? "high" : (idrs >= 30 ? "mod" : "low");
+
+  // Blood sugar, if measured
+  var gluState = "nm";
+  if (x.glu !== null) {
+    if (x.gtype === "fasting") gluState = x.glu >= 126 ? "dia" : (x.glu >= 100 ? "up" : "ok");
+    else gluState = x.glu >= 200 ? "dia" : (x.glu >= 140 ? "up" : "ok");
+  }
+  if (gluState === "dia") diabLevel = "high";
+  else if (gluState === "up" && diabLevel === "low") diabLevel = "mod";
+
+  // Blood pressure, if measured
+  var bpLevel = "nm";
+  if (x.sbp !== null && x.dbp !== null) {
+    if (x.sbp >= 140 || x.dbp >= 90) bpLevel = "high";
+    else if (x.sbp >= 130 || x.dbp >= 80) bpLevel = "raised";
+    else bpLevel = "normal";
+  }
+  var crisisBP = x.sbp !== null && (x.sbp >= 180 || x.dbp >= 120);
+
+  // Heart risk: count of factors
+  var hf = 0;
+  if ((x.sex === "m" && x.age >= 45) || (x.sex === "f" && x.age >= 55)) hf++;
+  if (x.tob) hf++;
+  if (bpLevel === "high") hf++;
+  if (diabLevel === "high") hf++;
+  if (bmi >= 25) hf++;
+  if (x.famh) hf++;
+  if (x.activity === 30) hf++;
+  var heartLevel = hf >= 4 ? "high" : (hf >= 2 ? "mod" : "low");
+
+  var flags = x.flags.length;
+  var red = flags > 0 || crisisBP || (x.gtype === "random" && x.glu !== null && x.glu >= 300);
+  var amber = diabLevel === "high" || bpLevel === "high" || gluState === "up" || heartLevel === "high" ||
+    (diabLevel === "mod" && x.symptoms.length >= 1) || (heartLevel === "mod" && bpLevel === "raised");
+  var triage = red ? "red" : (amber ? "amber" : "green");
+  var anyMod = diabLevel === "mod" || heartLevel === "mod" || bpLevel === "raised";
+
+  var diabWhy = [["w_idrs", {n: idrs}]];
+  if (gluState === "dia") diabWhy.push(["w_glu_dia", {v: x.glu}]);
+  else if (gluState === "up") diabWhy.push(["w_glu_up", {v: x.glu}]);
+  else if (gluState === "ok") diabWhy.push(["w_glu_ok", {v: x.glu}]);
+  if (x.symptoms.length) diabWhy.push(["w_sym", {n: x.symptoms.length}]);
+  var bpWhy = bpLevel === "nm" ? [["w_bpnm", {}]] : [["w_bp", {s: x.sbp, d: x.dbp}]];
+  var heartWhy = [["w_bmi", {v: bmi}], ["w_hf", {n: hf}]];
+  if (flags) heartWhy.unshift(["w_flag", {}]);
+
+  var steps = [];
+  if (triage === "red") steps.push("n_red1", "n_red2");
+  else if (triage === "amber") steps.push("n_amber1", "n_amber2");
+  else steps.push("n_green1");
+  if (triage !== "red" && (gluState === "nm" || bpLevel === "nm")) steps.push("n_nm");
+  if (triage !== "red") steps.push("n_life");
+
+  return {
+    x: x, bmi: bmi, idrs: idrs, hf: hf, triage: triage, anyMod: anyMod,
+    cats: [
+      {k: "diab", level: diabLevel, why: diabWhy},
+      {k: "bp", level: bpLevel, why: bpWhy},
+      {k: "heart", level: heartLevel, why: heartWhy}
+    ],
+    steps: steps
+  };
+}
+/* ---------- end of logic ---------- */
+
+/* ---------- Screen ---------- */
+var lang = "en", last = null;
+function $(id) { return document.getElementById(id); }
+function T(k, v) {
+  var s = (I18N[lang][k] !== undefined ? I18N[lang][k] : I18N.en[k]) || k;
+  if (v) for (var n in v) s = s.split("{" + n + "}").join(v[n]);
+  return s;
+}
+function applyLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  var els = document.querySelectorAll("[data-i]");
+  for (var i = 0; i < els.length; i++) els[i].textContent = T(els[i].getAttribute("data-i"));
+  var bs = document.querySelectorAll(".langs button");
+  for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-lang") === l ? "true" : "false");
+  try { localStorage.setItem("ss-lang", l); } catch (e) {}
+  if (last) render(last);
+}
+
+var RANGES = {age: [18, 100], height: [120, 220], weight: [25, 250], waist: [40, 200], sbp: [70, 260], dbp: [40, 160], glu: [40, 600]};
+function num(id) { var v = $(id).value.trim(); return v === "" ? null : Number(v); }
+
+function readForm() {
+  var ok = true, bad = [];
+  function mark(id, msg) { $("e_" + id).textContent = msg ? T("errRange", {a: RANGES[id][0], b: RANGES[id][1]}) : ""; $(id).setAttribute("aria-invalid", msg ? "true" : "false"); if (msg) { ok = false; bad.push(id); } }
+  var x = {};
+  ["age", "height", "weight", "waist"].forEach(function (id) {
+    var v = num(id); x[id] = v;
+    mark(id, v === null || isNaN(v) || v < RANGES[id][0] || v > RANGES[id][1]);
+  });
+  ["sbp", "dbp", "glu"].forEach(function (id) {
+    var v = num(id); x[id] = v;
+    mark(id, v !== null && (isNaN(v) || v < RANGES[id][0] || v > RANGES[id][1]));
+  });
+  if ((x.sbp === null) !== (x.dbp === null)) {
+    ok = false;
+    var miss = x.sbp === null ? "sbp" : "dbp";
+    $("e_" + miss).textContent = T("errPair"); $(miss).setAttribute("aria-invalid", "true"); bad.push(miss);
+  }
+  x.sex = $("sex").value; x.activity = Number($("activity").value); x.famd = Number($("famd").value);
+  x.famh = $("famh").checked; x.tob = $("tob").checked; x.gtype = $("gtype").value;
+  x.symptoms = ["sy1", "sy2", "sy3", "sy4", "sy5"].filter(function (id) { return $(id).checked; });
+  x.flags = ["r1", "r2", "r3", "r4", "r5"].filter(function (id) { return $(id).checked; });
+  return {ok: ok, x: x, first: bad[0]};
+}
+
+var ICONS = {
+  green: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 25l7 7 13-15" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  amber: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5L45 42H3z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M24 18v12" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="36" r="2.6" fill="currentColor"/></svg>',
+  red: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 4h16l12 12v16L32 44H16L4 32V16z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M17 17l14 14M31 17L17 31" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>'
+};
+function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c]; }); }
+function pillClass(level) { return {low: "ok", normal: "ok", mod: "warn", raised: "warn", high: "bad", nm: "none"}[level]; }
+
+function summaryText(r) {
+  var E = I18N.en, x = r.x;
+  function en(k, v) { var s = E[k]; if (v) for (var n in v) s = s.split("{" + n + "}").join(v[n]); return s; }
+  var L = [];
+  L.push("SwasthaSaathi screening summary (not a diagnosis)");
+  L.push("Result: " + r.triage.toUpperCase());
+  L.push("Age " + x.age + ", " + (x.sex === "m" ? "male" : "female") + ", BMI " + r.bmi + ", waist " + x.waist + " cm");
+  L.push("BP: " + (x.sbp === null ? "not measured" : x.sbp + "/" + x.dbp + " mmHg"));
+  L.push("Blood sugar: " + (x.glu === null ? "not measured" : x.glu + " mg/dL (" + x.gtype + ")"));
+  L.push("Diabetes risk score (IDRS): " + r.idrs + "/100, " + en(r.cats[0].level));
+  L.push("Heart risk factors: " + r.hf + ", " + en(r.cats[2].level));
+  L.push("Symptoms: " + (x.symptoms.length ? x.symptoms.map(function (k) { return E[k]; }).join("; ") : "none"));
+  L.push("Danger signs: " + (x.flags.length ? x.flags.map(function (k) { return E[k]; }).join("; ") : "none"));
+  L.push("Tobacco: " + (x.tob ? "yes" : "no") + ". Family history of diabetes: " + ({0: "none", 10: "one parent", 20: "both parents"}[x.famd]) + ". Early heart disease in family: " + (x.famh ? "yes" : "no") + ".");
+  L.push("Advice given: " + r.steps.filter(function (k) { return k !== "n_life"; }).map(function (k) { return en(k); }).join(" "));
+  return L.join("\n");
+}
+
+function render(r) {
+  last = r;
+  var html = '<div class="banner ' + r.triage + '">' + ICONS[r.triage] + '<h2>' + esc(T(r.triage)) + '</h2></div>';
+  html += '<ul class="next">' + r.steps.map(function (k) { return "<li>" + esc(T(k)) + "</li>"; }).join("") + "</ul>";
+  html += '<div class="cats">' + r.cats.map(function (c) {
+    return '<div class="cat"><h3>' + esc(T(c.k)) + '</h3><div><span class="pill ' + pillClass(c.level) + '">' + esc(T(c.level)) + '</span><ul>' +
+      c.why.map(function (w) { return "<li>" + esc(T(w[0], w[1])) + "</li>"; }).join("") + "</ul></div></div>";
+  }).join("") + "</div>";
+  html += '<div class="summary"><h3>' + esc(T("sumTitle")) + '</h3><p class="hint">' + esc(T("sumNote")) + '</p><pre id="sumText">' + esc(summaryText(r)) + '</pre><button type="button" class="btn ghost" id="copyBtn">' + esc(T("copy")) + '</button></div>';
+  var el = $("result");
+  el.innerHTML = html; el.hidden = false;
+  $("copyBtn").onclick = function () {
+    var btn = this, txt = summaryText(last);
+    function done() { btn.textContent = T("copied"); setTimeout(function () { btn.textContent = T("copy"); }, 1600); }
+    function fallback() {
+      var range = document.createRange(); range.selectNodeContents($("sumText"));
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+    try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+  };
+}
+
+$("form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var f = readForm();
+  $("formErr").textContent = f.ok ? "" : T("formErr");
+  if (!f.ok) { $(f.first).focus(); return; }
+  render(assess(f.x));
+  $("result").scrollIntoView({behavior: "smooth", block: "start"});
+});
+$("reset").addEventListener("click", function () {
+  $("form").reset();
+  ["age", "height", "weight", "waist", "sbp", "dbp", "glu"].forEach(function (id) { $(id).value = ""; $("e_" + id).textContent = ""; $(id).setAttribute("aria-invalid", "false"); });
+  ["sy1", "sy2"].forEach(function (id) { $(id).checked = false; });
+  $("sex").value = "m"; $("activity").value = "0"; $("famd").value = "0"; $("gtype").value = "fasting";
+  $("formErr").textContent = ""; $("result").hidden = true; $("result").innerHTML = ""; last = null;
+  $("age").focus();
+});
+document.querySelectorAll(".langs button").forEach(function (b) {
+  b.addEventListener("click", function () { applyLang(b.getAttribute("data-lang")); });
+});
+
+var saved = "en";
+try { saved = localStorage.getItem("ss-lang") || "en"; } catch (e) {}
+applyLang(I18N[saved] ? saved : "en");
+</script>
+
+</body>
+</html>
